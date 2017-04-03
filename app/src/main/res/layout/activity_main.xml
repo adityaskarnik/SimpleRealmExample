@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_margin="20dp"
+    tools:context="com.example.aditya.realmexample.MainActivity">
+
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter your name"
+        android:inputType="textPersonName"
+        android:maxLines="1"
+        android:imeOptions="actionNext"
+        android:id="@+id/edit_name"
+        android:textSize="18sp"/>
+
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter your age"
+        android:inputType="number"
+        android:maxLines="1"
+        android:imeOptions="actionNext"
+        android:id="@+id/edit_age"
+        android:textSize="18sp"/>
+
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter your contact number"
+        android:inputType="phone"
+        android:maxLines="1"
+        android:imeOptions="actionNext"
+        android:maxLength="10"
+        android:id="@+id/edit_number"
+        android:textSize="18sp"/>
+
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter your email"
+        android:inputType="textEmailAddress"
+        android:id="@+id/edit_email"
+        android:maxLines="1"
+        android:imeOptions="actionNext"
+        android:textSize="18sp"/>
+
+
+    <Button
+        android:layout_marginTop="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/submit"
+        android:text="Submit"/>
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scrollbars="vertical"
+        android:layout_marginTop="10dp"
+        />
+
+
+
+</LinearLayout>
