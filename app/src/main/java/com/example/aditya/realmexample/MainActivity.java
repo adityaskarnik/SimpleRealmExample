@@ -83,6 +83,7 @@ public class MainActivity extends AppCompatActivity {
                         if(getData(Integer.parseInt(idToEdit)) != null) {
                             final Dialog dialog2 = new Dialog(MainActivity.this);
                             dialog2.setContentView(R.layout.edit_the_details);
+                            dialog2.setTitle("Edit fields");
                             final EditText editText = (EditText) dialog2.findViewById(R.id.edit_name);
                             final EditText editText1 = (EditText) dialog2.findViewById(R.id.edit_age);
                             final EditText editText2 = (EditText) dialog2.findViewById(R.id.edit_number);
@@ -99,14 +100,18 @@ public class MainActivity extends AppCompatActivity {
                             button.setOnClickListener(new View.OnClickListener() {
                                 @Override
                                 public void onClick(View v) {
-                                    realm.beginTransaction();
-                                    final ObjectData object = realm.createObject(ObjectData.class);
+                                    int id = Integer.parseInt(idToEdit);
 
-                                    object.setId(getData(Integer.parseInt(idToEdit)).getId());
-                                    object.setName(editText.getText().toString());
-                                    object.setAge(editText1.getText().toString());
-                                    object.setNumber(editText2.getText().toString());
-                                    object.setEmail(editText3.getText().toString());
+                                    RealmResults<ObjectData> results = realm.where(ObjectData.class).equalTo("id", id).findAll();
+
+                                    realm.beginTransaction();
+
+                                    for (int i = 0; i < results.size(); i++) {
+                                        results.get(i).setName(editText.getText().toString());
+                                        results.get(i).setAge(editText1.getText().toString());
+                                        results.get(i).setNumber(editText2.getText().toString());
+                                        results.get(i).setEmail(editText3.getText().toString());
+                                    }
 
                                     realm.commitTransaction();
 
@@ -124,6 +129,8 @@ public class MainActivity extends AppCompatActivity {
 
                                         dataListAdapter.notifyDataSetChanged();
                                     }
+                                    dialog2.dismiss();
+                                    dialog.dismiss();
                                 }
                             });
 
@@ -146,44 +153,48 @@ public class MainActivity extends AppCompatActivity {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(editText.getText().toString().equals("")) {
-                    return;
+                try {
+                    if (editText.getText().toString().equals("")) {
+                        return;
+                    }
+                    realm.beginTransaction();
+                    final ObjectData object = realm.createObject(ObjectData.class);
+
+                    object.setId(realm.where(ObjectData.class).max("id").intValue() + 1);
+                    object.setName(editText.getText().toString());
+                    object.setAge(editText1.getText().toString());
+                    object.setNumber(editText2.getText().toString());
+                    object.setEmail(editText3.getText().toString());
+
+                    realm.commitTransaction();
+
+                    clear();
+
+                    RealmResults<ObjectData> results1 =
+                            realm.where(ObjectData.class).findAll();
+                    for (ObjectData c : results1) {
+                        DataObject dataObject = new DataObject(c.getId(),
+                                c.getName(),
+                                c.getAge(),
+                                c.getNumber(),
+                                c.getEmail());
+                        dataList.add(dataObject);
+
+                        dataListAdapter.notifyDataSetChanged();
+
+
+                        Log.d("RealmResult", String.valueOf(c.getId()) + ", " + c.getName() + ", " + c.getAge() + ", " + c.getNumber() + ", " + c.getEmail());
+                    }
+
+                    editText.setText("");
+                    editText1.setText("");
+                    editText2.setText("");
+                    editText3.setText("");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Log.d("catch error", e.getMessage());
+                    Toast.makeText(MainActivity.this, ""+e.getMessage(), Toast.LENGTH_SHORT).show();
                 }
-                realm.beginTransaction();
-                final ObjectData object = realm.createObject(ObjectData.class);
-
-                object.setId(realm.where(ObjectData.class).max("id").intValue() + 1);
-                object.setName(editText.getText().toString());
-                object.setAge(editText1.getText().toString());
-                object.setNumber(editText2.getText().toString());
-                object.setEmail(editText3.getText().toString());
-
-                realm.commitTransaction();
-
-                clear();
-
-                RealmResults<ObjectData> results1 =
-                        realm.where(ObjectData.class).findAll();
-                for(ObjectData c:results1) {
-                DataObject dataObject = new DataObject(c.getId(),
-                        c.getName(),
-                        c.getAge(),
-                        c.getNumber(),
-                        c.getEmail());
-                dataList.add(dataObject);
-
-                dataListAdapter.notifyDataSetChanged();
-
-
-
-
-                    Log.d("RealmResult", String.valueOf(c.getId())+", "+c.getName()+", "+c.getAge()+", "+c.getNumber()+", "+c.getEmail());
-                }
-
-                editText.setText("");
-                editText1.setText("");
-                editText2.setText("");
-                editText3.setText("");
             }
         });
 
