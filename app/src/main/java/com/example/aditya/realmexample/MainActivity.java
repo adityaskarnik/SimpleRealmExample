@@ -14,10 +14,8 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import io.realm.Realm;
-import io.realm.RealmQuery;
 import io.realm.RealmResults;
 
 public class MainActivity extends AppCompatActivity {
@@ -33,7 +31,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        realm = Realm.getInstance(MainActivity.this);
+        realm = Realm.getDefaultInstance();
 
 
         final EditText editText = (EditText) findViewById(R.id.edit_name);
@@ -43,6 +41,8 @@ public class MainActivity extends AppCompatActivity {
 
         Button button = (Button) findViewById(R.id.submit);
         Button edit = (Button) findViewById(R.id.edit);
+        Button delete = (Button) findViewById(R.id.delete);
+        Button deleteAll = (Button) findViewById(R.id.deleteAll);
 
         recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
 
@@ -65,6 +65,90 @@ public class MainActivity extends AppCompatActivity {
             dataListAdapter.notifyDataSetChanged();
         }
 
+        deleteAll.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(getData(1) != null ) {
+                    final RealmResults<ObjectData> results = realm.where(ObjectData.class).equalTo("id", Integer.parseInt(idToEdit)).findAll();
+
+                    realm.executeTransaction(new Realm.Transaction() {
+                        @Override
+                        public void execute(Realm realm) {
+                            results.deleteAllFromRealm();
+                        }
+                    });
+
+                    clear();
+
+                    RealmResults<ObjectData> results1 =
+                            realm.where(ObjectData.class).findAll();
+                    for (ObjectData c : results1) {
+                        DataObject dataObject = new DataObject(c.getId(),
+                                c.getName(),
+                                c.getAge(),
+                                c.getNumber(),
+                                c.getEmail());
+                        dataList.add(dataObject);
+
+                        dataListAdapter.notifyDataSetChanged();
+                    }
+                } else {
+                    Toast.makeText(MainActivity.this, "No records to delete", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+        delete.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final Dialog dialog = new Dialog(MainActivity.this);
+                dialog.setContentView(R.layout.enter_id);
+
+                final EditText editTextId = (EditText) dialog.findViewById(R.id.editTextId);
+                Button buttonOk = (Button) dialog.findViewById(R.id.buttonOk);
+                buttonOk.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        idToEdit = editTextId.getText().toString();
+                        /*RealmQuery<ObjectData> results1 =
+                                realm.where(ObjectData.class).equalTo("id",Integer.parseInt(idToEdit));
+                        Log.d("resultforquery", String.valueOf(realm.where(ObjectData.class).equalTo("id",Integer.parseInt(idToEdit))));*/
+                        if(getData(Integer.parseInt(idToEdit)) != null) {
+                            final RealmResults<ObjectData> results = realm.where(ObjectData.class).equalTo("id", Integer.parseInt(idToEdit)).findAll();
+
+                            realm.executeTransaction(new Realm.Transaction() {
+                                @Override
+                                public void execute(Realm realm) {
+
+                                    ObjectData object = results.get(Integer.parseInt(idToEdit)-1);
+                                    object.deleteFromRealm();
+                                }
+                            });
+
+                            clear();
+
+                            RealmResults<ObjectData> results1 =
+                                    realm.where(ObjectData.class).findAll();
+                            for(ObjectData c:results1) {
+                                DataObject dataObject = new DataObject(c.getId(),
+                                        c.getName(),
+                                        c.getAge(),
+                                        c.getNumber(),
+                                        c.getEmail());
+                                dataList.add(dataObject);
+
+                                dataListAdapter.notifyDataSetChanged();
+                            }
+                        } else {
+                            Toast.makeText(MainActivity.this, "No such ID exists", Toast.LENGTH_SHORT).show();
+                            dialog.dismiss();
+                        }
+                        dialog.dismiss();
+                    }
+                });
+                dialog.show();
+            }
+        });
         edit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -155,6 +239,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 try {
                     if (editText.getText().toString().equals("")) {
+                        Toast.makeText(MainActivity.this, "Enter some data to add, Idiot!", Toast.LENGTH_SHORT).show();
                         return;
                     }
                     realm.beginTransaction();
@@ -209,5 +294,12 @@ public class MainActivity extends AppCompatActivity {
     public ObjectData getData(int id) {
 
         return realm.where(ObjectData.class).equalTo("id", id).findFirst();
+    }
+
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        realm.close();
     }
 }
