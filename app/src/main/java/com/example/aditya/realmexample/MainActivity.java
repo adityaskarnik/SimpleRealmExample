@@ -1,12 +1,15 @@
 package com.example.aditya.realmexample;
 
 import android.app.Dialog;
+import android.content.Context;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -31,6 +34,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        //default name for database
+        //requires to add the realm.init() for initialization od realm in Application
         realm = Realm.getDefaultInstance();
 
 
@@ -52,6 +57,12 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setAdapter(dataListAdapter);
         Log.d("recycler view","init view");
 
+        getWindow().setSoftInputMode(
+                WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN
+        );
+
+        //fetch all the data from existing database
+        //and display in the recyclerview
         RealmResults<ObjectData> results1 =
                 realm.where(ObjectData.class).findAll();
         for(ObjectData c:results1) {
@@ -71,6 +82,9 @@ public class MainActivity extends AppCompatActivity {
                 if(getData(1) != null ) {
                     final RealmResults<ObjectData> results = realm.where(ObjectData.class).equalTo("id", Integer.parseInt(idToEdit)).findAll();
 
+                    //delete all the data from database
+                    //requires to be added in executeTransaction
+                    //delete query runs in the executeTransaction only
                     realm.executeTransaction(new Realm.Transaction() {
                         @Override
                         public void execute(Realm realm) {
@@ -78,8 +92,10 @@ public class MainActivity extends AppCompatActivity {
                         }
                     });
 
+                    //clear all the items from recyclerview
                     clear();
 
+                    //re adding the data to recyclerview with newly added record
                     RealmResults<ObjectData> results1 =
                             realm.where(ObjectData.class).findAll();
                     for (ObjectData c : results1) {
@@ -119,14 +135,18 @@ public class MainActivity extends AppCompatActivity {
                             realm.executeTransaction(new Realm.Transaction() {
                                 @Override
                                 public void execute(Realm realm) {
-
+                                    //delete single record from database
+                                    //getting the single record with
+                                    //where clause used above => "results"
                                     ObjectData object = results.get(Integer.parseInt(idToEdit)-1);
                                     object.deleteFromRealm();
                                 }
                             });
 
+                            //clear all the items from recyclerview
                             clear();
 
+                            //re adding the data to recyclerview with newly added record
                             RealmResults<ObjectData> results1 =
                                     realm.where(ObjectData.class).findAll();
                             for(ObjectData c:results1) {
@@ -186,10 +206,12 @@ public class MainActivity extends AppCompatActivity {
                                 public void onClick(View v) {
                                     int id = Integer.parseInt(idToEdit);
 
+                                    //fetching the required value from database using where clause
                                     RealmResults<ObjectData> results = realm.where(ObjectData.class).equalTo("id", id).findAll();
 
                                     realm.beginTransaction();
 
+                                    //updating the data in database to edit the values
                                     for (int i = 0; i < results.size(); i++) {
                                         results.get(i).setName(editText.getText().toString());
                                         results.get(i).setAge(editText1.getText().toString());
@@ -199,8 +221,10 @@ public class MainActivity extends AppCompatActivity {
 
                                     realm.commitTransaction();
 
+                                    //clear all the items from recyclerview
                                     clear();
 
+                                    //re adding the data to recyclerview with newly added record
                                     RealmResults<ObjectData> results1 =
                                             realm.where(ObjectData.class).findAll();
                                     for(ObjectData c:results1) {
@@ -242,9 +266,14 @@ public class MainActivity extends AppCompatActivity {
                         Toast.makeText(MainActivity.this, "Enter some data to add, Idiot!", Toast.LENGTH_SHORT).show();
                         return;
                     }
+
+                    //update/create requires to be written inside beginTransaction and commitTransaction
                     realm.beginTransaction();
                     final ObjectData object = realm.createObject(ObjectData.class);
 
+                    //setting a default value for id as primary key
+                    //as there is no auto increment in realm we need to do it manually
+                    //this is where it returns the maximum values that exits in database add +1 to it
                     object.setId(realm.where(ObjectData.class).max("id").intValue() + 1);
                     object.setName(editText.getText().toString());
                     object.setAge(editText1.getText().toString());
@@ -300,6 +329,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        //do not forget to close this
         realm.close();
     }
 }
